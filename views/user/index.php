@@ -113,6 +113,7 @@ $this->params['breadcrumbs'][] = $this->title;
 						'visible'=>User::hasPermission('viewRegistrationIp'),
 					],
 					[
+                        'attribute'=>'',
 						'value'=>function(User $model){
 								return GhostHtml::a(
 									UserManagementModule::t('back', 'Roles and permissions'),
@@ -126,6 +127,7 @@ $this->params['breadcrumbs'][] = $this->title;
 						],
 					],
 					[
+                        'attribute'=>'',
 						'value'=>function(User $model){
 								return GhostHtml::a(
 									UserManagementModule::t('back', 'Change password'),

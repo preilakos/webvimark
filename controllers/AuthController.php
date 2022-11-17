@@ -5,12 +5,14 @@ namespace webvimark\modules\UserManagement\controllers;
 use webvimark\components\BaseController;
 use webvimark\modules\UserManagement\components\UserAuthEvent;
 use webvimark\modules\UserManagement\models\forms\ChangeOwnPasswordForm;
+use webvimark\modules\UserManagement\models\forms\ChangeOwnUsernameForm;
 use webvimark\modules\UserManagement\models\forms\ConfirmEmailForm;
 use webvimark\modules\UserManagement\models\forms\LoginForm;
 use webvimark\modules\UserManagement\models\forms\PasswordRecoveryForm;
 use webvimark\modules\UserManagement\models\User;
 use webvimark\modules\UserManagement\UserManagementModule;
 use Yii;
+use yii\helpers\Url;
 use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
@@ -71,7 +73,50 @@ class AuthController extends BaseController
 		return $this->redirect(Yii::$app->homeUrl);
 	}
 
-	/**
+    /**
+     * Change your own password
+     *
+     * @throws \yii\web\ForbiddenHttpException
+     * @return string|\yii\web\Response
+     */
+    public function actionChangeOwnUsername()
+    {
+        if ( Yii::$app->user->isGuest )
+        {
+            return $this->goHome();
+        }
+
+        $user = User::getCurrentUser();
+
+        if ( $user->status != User::STATUS_ACTIVE )
+        {
+            throw new ForbiddenHttpException();
+        }
+
+        $model = new ChangeOwnUsernameForm();
+        $model->username = $user->username;
+
+        if ( Yii::$app->request->isAjax AND $model->load(Yii::$app->request->post()) )
+        {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return ActiveForm::validate($model);
+        }
+
+        if ( $model->load(Yii::$app->request->post()) )
+        {
+            $user->username = $model->username;
+            if( $user->save() )
+            {
+                Yii::$app->session->setFlash('success', 'A felhasználónév sikeresen módosítva.');
+                return $this->redirect(Url::current());
+            }
+        }
+
+        return $this->renderIsAjax('changeOwnUsername', compact('model'));
+    }
+
+
+    /**
 	 * Change your own password
 	 *
 	 * @throws \yii\web\ForbiddenHttpException
@@ -100,9 +145,13 @@ class AuthController extends BaseController
 			return ActiveForm::validate($model);
 		}
 
-		if ( $model->load(Yii::$app->request->post()) AND $model->changePassword() )
+		if ( $model->load(Yii::$app->request->post()) )
 		{
-			return $this->renderIsAjax('changeOwnPasswordSuccess');
+            if( $model->changePassword() )
+            {
+                Yii::$app->session->setFlash('success', 'A jelszó sikeresen módosítva.');
+                return $this->redirect(Url::current());
+            }
 		}
 
 		return $this->renderIsAjax('changeOwnPassword', compact('model'));
@@ -236,7 +285,8 @@ class AuthController extends BaseController
 				{
 					if ( $this->triggerModuleEvent(UserAuthEvent::AFTER_PASSWORD_RECOVERY_REQUEST, ['model'=>$model]) )
 					{
-						return $this->renderIsAjax('passwordRecoverySuccess');
+                        Yii::$app->session->setFlash('success', 'A(z) ' . $model->email . ' e-mail címre elküldtük a további teendőket.');
+						return $this->refresh();
 					}
 				}
 				else
@@ -284,12 +334,13 @@ class AuthController extends BaseController
 
 				if ( $this->triggerModuleEvent(UserAuthEvent::AFTER_PASSWORD_RECOVERY_COMPLETE, ['model'=>$model]) )
 				{
-					return $this->renderIsAjax('changeOwnPasswordSuccess');
+                    Yii::$app->session->setFlash('success', 'A jelszó sikeresen módosítva. Most már bejelentkezhet az új jelszóval.');
+					return $this->redirect(Yii::$app->user->loginUrl);
 				}
 			}
 		}
 
-		return $this->renderIsAjax('changeOwnPassword', compact('model'));
+		return $this->renderIsAjax('passwordRecoverySuccess', compact('model'));
 	}
 
 	/**
