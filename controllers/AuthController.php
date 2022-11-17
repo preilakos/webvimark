@@ -31,7 +31,7 @@ class AuthController extends BaseController
 	public function actions()
 	{
 		return [
-			'captcha' => $this->module->captchaOptions,
+			'captcha' => Yii::$app->controller->module->captchaOptions,
 		];
 	}
 
