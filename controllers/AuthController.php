@@ -251,97 +251,95 @@ class AuthController extends BaseController
 	}
 
 
-	/**
-	 * Form to recover password
-	 *
-	 * @return string|\yii\web\Response
-	 */
-	public function actionPasswordRecovery()
-	{
-		if ( !Yii::$app->user->isGuest )
-		{
-			return $this->goHome();
-		}
+    /**
+     * Form to recover password
+     *
+     * @return string|\yii\web\Response
+     */
+    public function actionPasswordRecovery()
+    {
+        if ( !Yii::$app->user->isGuest )
+        {
+            return $this->goHome();
+        }
 
-		$model = new PasswordRecoveryForm();
+        $model = new PasswordRecoveryForm();
 
-		if ( Yii::$app->request->isAjax AND $model->load(Yii::$app->request->post()) )
-		{
-			Yii::$app->response->format = Response::FORMAT_JSON;
+        if ( Yii::$app->request->isAjax AND $model->load(Yii::$app->request->post()) )
+        {
+            Yii::$app->response->format = Response::FORMAT_JSON;
 
-			// Ajax validation breaks captcha. See https://github.com/yiisoft/yii2/issues/6115
-			// Thanks to TomskDiver
-			$validateAttributes = $model->attributes;
-			unset($validateAttributes['captcha']);
+            // Ajax validation breaks captcha. See https://github.com/yiisoft/yii2/issues/6115
+            // Thanks to TomskDiver
+            $validateAttributes = $model->attributes;
+            unset($validateAttributes['captcha']);
 
-			return ActiveForm::validate($model, $validateAttributes);
-		}
+            return ActiveForm::validate($model, $validateAttributes);
+        }
 
-		if ( $model->load(Yii::$app->request->post()) AND $model->validate() )
-		{
-			if ( $this->triggerModuleEvent(UserAuthEvent::BEFORE_PASSWORD_RECOVERY_REQUEST, ['model'=>$model]) )
-			{
-				if ( $model->sendEmail(false) )
-				{
-					if ( $this->triggerModuleEvent(UserAuthEvent::AFTER_PASSWORD_RECOVERY_REQUEST, ['model'=>$model]) )
-					{
-                        Yii::$app->session->setFlash('success', 'A(z) ' . $model->email . ' e-mail címre elküldtük a további teendőket.');
-						return $this->refresh();
-					}
-				}
-				else
-				{
-					Yii::$app->session->setFlash('error', UserManagementModule::t('front', "Unable to send message for email provided"));
-				}
-			}
-		}
+        if ( $model->load(Yii::$app->request->post()) AND $model->validate() )
+        {
+            if ( $this->triggerModuleEvent(UserAuthEvent::BEFORE_PASSWORD_RECOVERY_REQUEST, ['model'=>$model]) )
+            {
+                if ( $model->sendEmail(false) )
+                {
+                    if ( $this->triggerModuleEvent(UserAuthEvent::AFTER_PASSWORD_RECOVERY_REQUEST, ['model'=>$model]) )
+                    {
+                        return $this->renderIsAjax('passwordRecoverySuccess');
+                    }
+                }
+                else
+                {
+                    Yii::$app->session->setFlash('error', UserManagementModule::t('front', "Unable to send message for email provided"));
+                }
+            }
+        }
 
-		return $this->renderIsAjax('passwordRecovery', compact('model'));
-	}
+        return $this->renderIsAjax('passwordRecovery', compact('model'));
+    }
 
-	/**
-	 * Receive token, find user by it and show form to change password
-	 *
-	 * @param string $token
-	 *
-	 * @throws \yii\web\NotFoundHttpException
-	 * @return string|\yii\web\Response
-	 */
-	public function actionPasswordRecoveryReceive($token)
-	{
-		if ( !Yii::$app->user->isGuest )
-		{
-			return $this->goHome();
-		}
+    /**
+     * Receive token, find user by it and show form to change password
+     *
+     * @param string $token
+     *
+     * @throws \yii\web\NotFoundHttpException
+     * @return string|\yii\web\Response
+     */
+    public function actionPasswordRecoveryReceive($token)
+    {
+        if ( !Yii::$app->user->isGuest )
+        {
+            return $this->goHome();
+        }
 
-		$user = User::findByConfirmationToken($token);
+        $user = User::findByConfirmationToken($token);
 
-		if ( !$user )
-		{
-			throw new NotFoundHttpException(UserManagementModule::t('front', 'Token not found. It may be expired. Try reset password once more'));
-		}
+        if ( !$user )
+        {
+            throw new NotFoundHttpException(UserManagementModule::t('front', 'Token not found. It may be expired. Try reset password once more'));
+        }
 
-		$model = new ChangeOwnPasswordForm([
-			'scenario'=>'restoreViaEmail',
-			'user'=>$user,
-		]);
+        $model = new ChangeOwnPasswordForm([
+            'scenario'=>'restoreViaEmail',
+            'user'=>$user,
+        ]);
 
-		if ( $model->load(Yii::$app->request->post()) AND $model->validate() )
-		{
-			if ( $this->triggerModuleEvent(UserAuthEvent::BEFORE_PASSWORD_RECOVERY_COMPLETE, ['model'=>$model]) )
-			{
-				$model->changePassword(false);
+        if ( $model->load(Yii::$app->request->post()) AND $model->validate() )
+        {
+            if ( $this->triggerModuleEvent(UserAuthEvent::BEFORE_PASSWORD_RECOVERY_COMPLETE, ['model'=>$model]) )
+            {
+                $model->changePassword(false);
 
-				if ( $this->triggerModuleEvent(UserAuthEvent::AFTER_PASSWORD_RECOVERY_COMPLETE, ['model'=>$model]) )
-				{
-                    Yii::$app->session->setFlash('success', 'A jelszó sikeresen módosítva. Most már bejelentkezhet az új jelszóval.');
-					return $this->redirect(Yii::$app->user->loginUrl);
-				}
-			}
-		}
+                if ( $this->triggerModuleEvent(UserAuthEvent::AFTER_PASSWORD_RECOVERY_COMPLETE, ['model'=>$model]) )
+                {
+                    return $this->renderIsAjax('changeOwnPasswordSuccess');
+                }
+            }
+        }
 
-		return $this->renderIsAjax('passwordRecoverySuccess', compact('model'));
-	}
+        return $this->renderIsAjax('changeOwnPassword', compact('model'));
+    }
 
 	/**
 	 * @return string|\yii\web\Response
