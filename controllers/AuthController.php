@@ -285,7 +285,7 @@ class AuthController extends BaseController
                 {
                     if ( $this->triggerModuleEvent(UserAuthEvent::AFTER_PASSWORD_RECOVERY_REQUEST, ['model'=>$model]) )
                     {
-                        return $this->renderIsAjax('passwordRecoverySuccess');
+                        return $this->renderIsAjax('passwordRecoverySuccess', ['model' => $model]);
                     }
                 }
                 else
