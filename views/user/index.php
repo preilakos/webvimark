@@ -111,6 +111,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         'visible'=>User::hasPermission('viewRegistrationIp'),
                     ],
                     [
+                        'label' => '',
                         'value'=>function(User $model){
                             return '<p>' . GhostHtml::a(
                                     UserManagementModule::t('back', 'Roles and permissions'),
@@ -127,6 +128,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         ],
                     ],
                     [
+                        'label' => '',
                         'value'=>function(User $model){
                             return GhostHtml::a(
                                 UserManagementModule::t('back', 'Átváltás'),
