@@ -9,6 +9,7 @@ use webvimark\modules\UserManagement\models\forms\ChangeOwnUsernameForm;
 use webvimark\modules\UserManagement\models\forms\ConfirmEmailForm;
 use webvimark\modules\UserManagement\models\forms\LoginForm;
 use webvimark\modules\UserManagement\models\forms\PasswordRecoveryForm;
+use webvimark\modules\UserManagement\models\forms\RegistrationForm;
 use webvimark\modules\UserManagement\models\User;
 use webvimark\modules\UserManagement\UserManagementModule;
 use Yii;
@@ -314,10 +315,13 @@ class AuthController extends BaseController
         }
 
         $user = User::findByConfirmationToken($token);
-
         if ( !$user )
         {
-            throw new NotFoundHttpException(UserManagementModule::t('front', 'Token not found. It may be expired. Try reset password once more'));
+            $user = (new RegistrationForm())->checkConfirmationToken($token, false);
+            if( !$user )
+            {
+                throw new NotFoundHttpException(UserManagementModule::t('front', 'Token not found. It may be expired. Try reset password once more'));
+            }
         }
 
         $model = new ChangeOwnPasswordForm([

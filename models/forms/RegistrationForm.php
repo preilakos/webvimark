@@ -168,7 +168,7 @@ class RegistrationForm extends Model
 	 *
 	 * @return bool|User
 	 */
-	public function checkConfirmationToken($token)
+	public function checkConfirmationToken($token, $login = true)
 	{
 		$user = User::findInactiveByConfirmationToken($token);
 
@@ -187,7 +187,10 @@ class RegistrationForm extends Model
 				User::assignRole($user->id, $role);
 			}
 
-			Yii::$app->user->login($user);
+            if( $login )
+            {
+                Yii::$app->user->login($user);
+            }
 
 			return $user;
 		}
