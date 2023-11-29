@@ -249,7 +249,7 @@ class User extends UserIdentity
 	{
 		return [
 			['username', 'required'],
-			['username', 'unique'],
+			['username', 'validateUsernameUnique'],
 			['username', 'trim'],
 
 			[['status', 'email_confirmed'], 'integer'],
@@ -289,6 +289,22 @@ class User extends UserIdentity
 			}
 		}
 	}
+
+    public function validateUsernameUnique()
+    {
+        if ( $this->username )
+        {
+            $exists = User::findOne([
+                'username'          => $this->username,
+                'status'            => 1
+            ]);
+
+            if ( $exists AND $exists->id != $this->id )
+            {
+                $this->addError('username', UserManagementModule::t('front', 'Login has been taken'));
+            }
+        }
+    }
 
 	/**
 	 * Validate bind_to_ip attr to be in correct format
