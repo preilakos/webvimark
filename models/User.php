@@ -278,10 +278,10 @@ class User extends UserIdentity
 	{
 		if ( $this->email )
 		{
-			$exists = User::findOne([
+			$exists = self::findOne([
 				'email'           => $this->email,
 				'email_confirmed' => 1,
-                'status'          => 1
+                'status'          => self::STATUS_ACTIVE,
 			]);
 
 			if ( $exists AND $exists->id != $this->id )

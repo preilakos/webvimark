@@ -60,7 +60,7 @@ class RegistrationForm extends Model
             $exists = User::findOne([
                 'email'           => $this->username,
                 'email_confirmed' => 1,
-                'status'          => 1,
+                'status'          => User::STATUS_ACTIVE,
             ]);
 
             if( $exists )
