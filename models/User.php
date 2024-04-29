@@ -281,6 +281,7 @@ class User extends UserIdentity
 			$exists = User::findOne([
 				'email'           => $this->email,
 				'email_confirmed' => 1,
+                'status'          => 1
 			]);
 
 			if ( $exists AND $exists->id != $this->id )
