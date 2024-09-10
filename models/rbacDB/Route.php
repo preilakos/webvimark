@@ -226,7 +226,7 @@ class Route extends AbstractItem
 			return true;
 		}
 
-		if ( static::isInCommonPermission($route) )
+		if ( !Yii::$app->user->isGuest && static::isInCommonPermission($route) )
 		{
 			return true;
 		}
